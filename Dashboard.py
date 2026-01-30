@@ -1,5 +1,6 @@
 import os
 import subprocess
+import json
 
 def mostrar_codigo(ruta_script):
     # Asegúrate de que la ruta al script es absoluta
@@ -26,10 +27,52 @@ def ejecutar_codigo(ruta_script):
     except Exception as e:
         print(f"Ocurrió un error al ejecutar el código: {e}")
 
+class GestorTareas:
+    def __init__(self, archivo_tareas):
+        self.archivo_tareas = archivo_tareas
+        self.tareas = []
+        self.cargar_tareas()
+
+    def cargar_tareas(self):
+        if os.path.exists(self.archivo_tareas):
+            with open(self.archivo_tareas, 'r', encoding='utf-8') as archivo:
+                self.tareas = json.load(archivo)
+        else:
+            self.tareas = []
+
+    def guardar_tareas(self):
+        with open(self.archivo_tareas, 'w', encoding='utf-8') as archivo:
+            json.dump(self.tareas, archivo, indent=4, ensure_ascii=False)
+
+    def agregar_tarea(self, descripcion):
+        tarea = {
+            "descripcion": descripcion,
+            "estado": "Pendiente"
+        }
+        self.tareas.append(tarea)
+        self.guardar_tareas()
+        print("Tarea agregada correctamente.")
+
+    def listar_tareas(self):
+        if not self.tareas:
+            print("No hay tareas registradas.")
+        else:
+            for i, tarea in enumerate(self.tareas, start=1):
+                print(f"{i}. {tarea['descripcion']} - {tarea['estado']}")
+
+    def completar_tarea(self, indice):
+        if 0 <= indice < len(self.tareas):
+            self.tareas[indice]["estado"] = "Completada"
+            self.guardar_tareas()
+            print("Tarea marcada como completada.")
+        else:
+            print("Índice inválido.")
+
 def mostrar_menu():
     # Define la ruta base donde se encuentra el dashboard.py
     ruta_base = os.path.dirname(__file__)
-
+    gestor = GestorTareas(os.path.join(ruta_base, "tareas.json"))
+    
     unidades = {
         '1': 'Unidad 1',
         '2': 'Unidad 2'
@@ -37,17 +80,34 @@ def mostrar_menu():
 
     while True:
         print("\nMenu Principal - Dashboard")
-        # Imprime las opciones del menú principal
         for key in unidades:
             print(f"{key} - {unidades[key]}")
+        print("8 - Agregar tarea POO")
+        print("9 - Listar tareas POO")
+        print("10 - Completar tarea POO")
         print("0 - Salir")
 
         eleccion_unidad = input("Elige una unidad o '0' para salir: ")
+
         if eleccion_unidad == '0':
             print("Saliendo del programa.")
             break
+
         elif eleccion_unidad in unidades:
             mostrar_sub_menu(os.path.join(ruta_base, unidades[eleccion_unidad]))
+
+        elif eleccion_unidad == '8':
+            desc = input("Describe la tarea: ")
+            gestor.agregar_tarea(desc)
+
+        elif eleccion_unidad == '9':
+            gestor.listar_tareas()
+
+        elif eleccion_unidad == '10':
+            gestor.listar_tareas()
+            num = int(input("Número de tarea a completar: ")) - 1
+            gestor.completar_tarea(num)
+
         else:
             print("Opción no válida. Por favor, intenta de nuevo.")
 
